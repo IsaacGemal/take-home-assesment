@@ -1,20 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { startProcess, ProcessStatus } from '@/services/api';
+import { useState, useCallback, useMemo } from 'react';
+import { startProcess } from '@/services/api';
+import { ProcessStatus, ProcessStats } from '@/types/process';
+import { ProcessStats as ProcessStatsComponent } from '@/components/ProcessStats';
+import { TOTAL_PROCESSES } from '@/constants/process';
 
 export default function Home() {
   const [processes, setProcesses] = useState<ProcessStatus[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const completedCount = processes.filter(p => p.status === 'success').length;
-  const errorCount = processes.filter(p => p.status === 'error').length;
-  const totalCount = processes.length;
-  const progress = totalCount > 0 ? ((completedCount + errorCount) / totalCount) * 100 : 0;
+  const stats: ProcessStats = useMemo(() => {
+    const completedCount = processes.filter(p => p.status === 'success').length;
+    const errorCount = processes.filter(p => p.status === 'error').length;
+    const totalCount = processes.length;
+    const progress = totalCount > 0 ? ((completedCount + errorCount) / totalCount) * 100 : 0;
 
-  const handleStartProcess = async () => {
+    return {
+      completedCount,
+      errorCount,
+      totalCount,
+      progress
+    };
+  }, [processes]);
+
+  const handleStartProcess = useCallback(async () => {
     setIsProcessing(true);
-    const processArray = Array.from({ length: 50 }, (_, index) => ({
+    const processArray = Array.from({ length: TOTAL_PROCESSES }, (_, index) => ({
       id: index,
       status: 'pending' as const,
       startTime: new Date(),
@@ -22,7 +34,6 @@ export default function Home() {
     setProcesses(processArray);
 
     const requests = processArray.map(async (process) => {
-      console.log(`Starting process ${process.id + 1}/50`);
       try {
         await startProcess();
         setProcesses(prev =>
@@ -32,7 +43,6 @@ export default function Home() {
               : p
           )
         );
-        console.log(`✅ Process ${process.id + 1}/50 completed successfully`);
       } catch (error) {
         setProcesses(prev =>
           prev.map(p =>
@@ -41,40 +51,61 @@ export default function Home() {
               : p
           )
         );
-        console.error(`❌ Process ${process.id + 1}/50 failed`, error);
       }
     });
 
     await Promise.allSettled(requests);
     setIsProcessing(false);
-    console.log('All processes completed');
-  };
+  }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <main className="text-center space-y-4 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <main className="w-full max-w-xl space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Process Manager</h1>
+          <p className="text-gray-600">Monitor your running processes in real-time</p>
+        </div>
+
         <button
           onClick={handleStartProcess}
           disabled={isProcessing}
-          className="inline-flex items-center bg-black justify-center gap-2 rounded-lg text-sm font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-white hover:bg-black/80 h-11 px-8 py-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg px-8 py-3 font-medium
+            hover:from-blue-700 hover:to-blue-800 transition-all duration-200 
+            disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl
+            flex items-center justify-center gap-2"
         >
-          {isProcessing ? 'Processing...' : 'Start Process'}
+          {isProcessing ? (
+            <>
+              <LoadingSpinner />
+              Processing...
+            </>
+          ) : (
+            'Start Process'
+          )}
         </button>
 
-        {isProcessing && (
-          <div className="space-y-2">
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div
-                className="bg-blue-600 h-2.5 rounded-full"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-            <div className="text-sm text-gray-600">
-              {completedCount} completed • {errorCount} errors • {totalCount} total
-            </div>
-          </div>
-        )}
+        {isProcessing && <ProcessStatsComponent stats={stats} />}
       </main>
     </div>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
   );
 }
