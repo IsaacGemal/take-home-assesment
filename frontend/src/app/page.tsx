@@ -59,18 +59,18 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-secondary p-4">
       <main className="w-full max-w-xl space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Process Manager</h1>
-          <p className="text-gray-600">Monitor your running processes in real-time</p>
+          <h1 className="text-5xl font-outfit">Process Manager</h1>
+          <p className="font-inter text-gray-600">Monitor your running processes in real-time</p>
         </div>
 
         <button
           onClick={handleStartProcess}
           disabled={isProcessing}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg px-8 py-3 font-medium
-            hover:from-blue-700 hover:to-blue-800 transition-all duration-200 
+          className="w-full bg-primary-green text-white rounded-lg px-8 py-3 font-outfit
+            hover:opacity-90 transition-all duration-200 
             disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl
             flex items-center justify-center gap-2"
         >

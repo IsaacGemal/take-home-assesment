@@ -12,7 +12,7 @@ export function ProcessStats({ stats }: ProcessStatsProps) {
         <div className="space-y-6 bg-white p-8 rounded-3xl shadow-xl">
             <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                    className="absolute left-0 top-0 h-full transition-all duration-300 ease-in-out rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
+                    className="absolute left-0 top-0 h-full transition-all duration-300 ease-in-out rounded-full bg-primary-green"
                     style={{ width: `${progress}%` }}
                 />
             </div>
@@ -46,11 +46,11 @@ interface StatCardProps {
 
 function StatCard({ label, value, color }: StatCardProps) {
     return (
-        <div className="bg-gray-50 p-6 rounded-2xl">
-            <div className="text-3xl font-bold" style={{ color }}>
+        <div className="bg-secondary p-6 rounded-2xl">
+            <div className="text-3xl font-outfit font-bold" style={{ color }}>
                 {value}
             </div>
-            <div className="text-base text-gray-600 mt-2">{label}</div>
+            <div className="text-base font-inter text-gray-600 mt-2">{label}</div>
         </div>
     );
 } 
