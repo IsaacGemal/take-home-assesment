@@ -6,7 +6,7 @@ This is a FastAPI-based backend service that simulates a long-running process.
 
 1. Create a virtual environment (recommended):
    ```bash
-   python -m venv venv
+   uv venv venv
    source venv/bin/activate  # On Unix/macOS
    # OR
    .\venv\Scripts\activate  # On Windows
@@ -14,10 +14,14 @@ This is a FastAPI-based backend service that simulates a long-running process.
 
 2. Install dependencies:
    ```bash
-   pip install -r requirements.txt
+   uv pip install -r requirements.txt
    ```
 
 3. Run the application:
    ```bash
+   # Regular run
    python app/main.py
+   
+   # With hot reloading
+   uvicorn app.main:app --reload
    ```
