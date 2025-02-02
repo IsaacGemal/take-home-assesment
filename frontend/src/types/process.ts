@@ -18,3 +18,21 @@ export interface ProcessStats {
   totalCount: number;
   progress: number;
 }
+
+export interface ProcessStatsData {
+  pending: number;
+  running: number;
+  completed: number;
+  failed: number;
+  total: number;
+}
+
+export interface ProcessGridProps {
+  processes: Record<string, ProcessStatus>;
+}
+
+export interface ProcessStatsProps {
+  stats: ProcessStatsData;
+}
+
+export const TOTAL_PROCESSES = 50;
