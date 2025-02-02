@@ -1,63 +1,46 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { startProcess } from '@/services/api';
-import { ProcessStatus, ProcessStats } from '@/types/process';
-import { ProcessStats as ProcessStatsComponent } from '@/components/ProcessStats';
+import { useState, useCallback, useEffect } from 'react';
+import { wsService } from '@/services/api';
 import { TOTAL_PROCESSES } from '@/constants/process';
 
 export default function Home() {
-  const [processes, setProcesses] = useState<ProcessStatus[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const stats: ProcessStats = useMemo(() => {
-    const completedCount = processes.filter(p => p.status === 'success').length;
-    const errorCount = processes.filter(p => p.status === 'error').length;
-    const totalCount = processes.length;
-    const progress = totalCount > 0 ? ((completedCount + errorCount) / totalCount) * 100 : 0;
+  // Connect to WebSocket when component mounts
+  useEffect(() => {
+    wsService.connect()
+      .catch(error => console.error('Failed to connect to WebSocket:', error));
 
-    return {
-      completedCount,
-      errorCount,
-      totalCount,
-      progress
+    // Add message handler
+    const messageHandler = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+
+      if (data.status === 'all_completed') {
+        setIsProcessing(false);
+      }
     };
-  }, [processes]);
+
+    wsService.ws?.addEventListener('message', messageHandler);
+
+    // Cleanup on unmount
+    return () => {
+      wsService.ws?.removeEventListener('message', messageHandler);
+      wsService.disconnect();
+    };
+  }, []);
 
   const handleStartProcess = useCallback(async () => {
     setIsProcessing(true);
-    const processArray = Array.from({ length: TOTAL_PROCESSES }, (_, index) => ({
-      id: index,
-      status: 'pending' as const,
-      startTime: new Date(),
-    }));
-    setProcesses(processArray);
-
-    const requests = processArray.map(async (process) => {
-      try {
-        await startProcess();
-        setProcesses(prev =>
-          prev.map(p =>
-            p.id === process.id
-              ? { ...p, status: 'success', endTime: new Date() }
-              : p
-          )
-        );
-      } catch (error) {
-        setProcesses(prev =>
-          prev.map(p =>
-            p.id === process.id
-              ? { ...p, status: 'error', endTime: new Date() }
-              : p
-          )
-        );
-      }
-    });
-
-    await Promise.allSettled(requests);
-    setIsProcessing(false);
+    try {
+      wsService.startProcesses(TOTAL_PROCESSES);
+    } catch (error) {
+      console.error('Failed to start processes:', error);
+      setIsProcessing(false);
+    }
   }, []);
 
+  // For now, keep the same UI but with minimal state
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary p-4">
       <main className="w-full max-w-xl space-y-6">
@@ -83,8 +66,6 @@ export default function Home() {
             'Start Process'
           )}
         </button>
-
-        {isProcessing && <ProcessStatsComponent stats={stats} />}
       </main>
     </div>
   );
