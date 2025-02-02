@@ -90,6 +90,10 @@ class ConnectionManager:
             sleep_time = random.randint(30, 120)  # Adjust these values for testing
             await asyncio.sleep(sleep_time)
 
+            # Randomly fail 5% of processes after the wait time
+            if random.random() < 0.05:  # 5% chance of failure
+                raise Exception("Random process failure")
+
             # Update completion status
             completed_at = datetime.now(timezone.utc)
             self.tasks[task_id].update({
